@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Trained models
+best_model/
+models/
+models_ver5/
+
+# Prediction outputs
+predict_interest/models/
+predict_interest/models_ver5/
+
+# Data processing
+process_data/
+
+# Logs & caches
+logs/
+*.log
