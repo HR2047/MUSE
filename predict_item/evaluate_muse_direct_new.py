@@ -11,13 +11,13 @@ from argparse import ArgumentParser
 
 from dataset_utils_muse import get_val_or_test_dataloader
 
-sys.path.append("/home/hirosawa/research_m/MUSE_ver5/interest_extraction")
+sys.path.append("/home/hirosawa/research_m/MUSE/interest_extraction")
 from model import Model_ComiRec_SA  # モデルが格納されているファイルをインポート
 
-sys.path.append("/home/hirosawa/research_m/MUSE_ver5/predict_interest_pre")
+sys.path.append("/home/hirosawa/research_m/MUSE/predict_interest")
 from eval_utils import evaluate
 from utils import build_model, build_model_ver5, get_device, load_config
-from data_iterator_for_ver5_for_eval import DataIteratorVer5Eval
+from data_iterator_direct import DataIteratorDirect
 
 import torch
 import tensorflow as tf
@@ -57,13 +57,14 @@ def main():
     model_gsasrec = model_gsasrec.to(device)
     model_gsasrec.load_state_dict(torch.load(check_point, map_location=device))
 
-    test_dataloader = DataIteratorVer5Eval(
+    test_dataloader = DataIteratorDirect(
         source=config_gsasrec.test_full_path, 
-        embedding_dir_valid=config_gsasrec.embedding_dir_valid,
+        embedding_dir=config_gsasrec.embedding_dir_valid,
         batch_size=config_gsasrec.eval_batch_size, 
         maxlen=config_gsasrec.sequence_length, 
         padding_value=config_gsasrec.num_items+1, 
         device=device,
+        train_flag=0,
     )
 
     gpu_options = tf.GPUOptions(allow_growth=True)
