@@ -1,7 +1,7 @@
 import torch
 import tqdm 
-from gsasrec import GSASRec
-from gsasrec_ver5 import GSASRecVer5
+from gsasrec_label import GSASRec
+from gsasrec_vector import GSASRecVec
 from ir_measures import ScoredDoc, Qrel
 import ir_measures
 

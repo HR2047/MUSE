@@ -14,6 +14,7 @@ predict_interest/models_ver5/
 
 # Data processing
 process_data/
+data/
 
 # Logs & caches
 logs/

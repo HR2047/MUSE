@@ -2,8 +2,8 @@ import importlib
 from configs.config import GSASRecExperimentConfig
 from dataset_utils import get_num_items
 import torch
-from gsasrec import GSASRec
-from gsasrec_ver5 import GSASRecVer5
+from gsasrec_label import GSASRec
+from gsasrec_vector import GSASRecVec
 
 def load_config(config_file: str) -> GSASRecExperimentConfig:
     spec = importlib.util.spec_from_file_location("config", config_file)
@@ -18,7 +18,7 @@ def build_model(config: GSASRecExperimentConfig):
     return model
 
 def build_model_ver5(config: GSASRecExperimentConfig):
-    model = GSASRecVer5(sequence_length=config.sequence_length, embedding_dim=config.embedding_dim,
+    model = GSASRecVec(sequence_length=config.sequence_length, embedding_dim=config.embedding_dim,
                         num_heads=config.num_heads, num_blocks=config.num_blocks, dropout_rate=config.dropout_rate)
     return model
 

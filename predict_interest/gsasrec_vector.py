@@ -2,9 +2,9 @@ import torch
 from transformer_decoder import TransformerBlock
 
 # Transformerの入力に推定した興味ベクトルを使うGSASRec
-class GSASRecVer5(torch.nn.Module):
+class GSASRecVec(torch.nn.Module):
     def __init__ (self, sequence_length=200, embedding_dim=256, num_heads=4, num_blocks=3, dropout_rate=0.5, reuse_item_embeddings=False):
-        super(GSASRecVer5, self).__init__()
+        super(GSASRecVec, self).__init__()
         # self.num_items = num_items
         self.sequence_length = sequence_length
         self.embedding_dim = embedding_dim

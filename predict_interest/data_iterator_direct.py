@@ -2,7 +2,7 @@ import os
 import torch
 import random
 
-class DataIteratorVer5:
+class DataIteratorDirect:
 
     def __init__(
         self,
@@ -11,8 +11,8 @@ class DataIteratorVer5:
         batch_size,
         maxlen,
         padding_value,
-        train_neg_per_pos,
         device,
+        train_neg_per_pos=-1,
         train_flag=1
     ):
         self.device = device or torch.device("cpu")
@@ -157,3 +157,6 @@ class DataIteratorVer5:
 
         self.embedding_cache[user_id] = emb_table
         return emb_table
+    
+    def __len__(self):
+        return (len(self.users) + self.batch_size - 1) // self.batch_size
