@@ -2,15 +2,12 @@
 __pycache__/
 *.pyc
 *.pyo
+*.csv
 
 # Trained models
 best_model/
-models/
-models_ver5/
-
-# Prediction outputs
-predict_interest/models/
-predict_interest/models_ver5/
+models_direct/
+models_label/
 
 # Data processing
 process_data/
