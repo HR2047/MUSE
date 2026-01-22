@@ -26,13 +26,13 @@ config = GSASRecExperimentConfig(
     val_metric = R@1,
     # 以下を追加
     num_user=482934,
-    train_file_path="/home/hirosawa/research_m/MUSE_ver3/data/book_interest_data_gsasrec_muse3/train/input.txt",
-    valid_input_path="/home/hirosawa/research_m/MUSE_ver3/data/book_interest_data_gsasrec_muse3/val/input.txt",
-    valid_output_path="/home/hirosawa/research_m/MUSE_ver3/data/book_interest_data_gsasrec_muse3/val/output.txt",
+    train_file_path="/home/hirosawa/research_m/MUSE/data/book_interest_data_gsasrec_muse3/train/input.txt",
+    valid_input_path="/home/hirosawa/research_m/MUSE/data/book_interest_data_gsasrec_muse3/val/input.txt",
+    valid_output_path="/home/hirosawa/research_m/MUSE/data/book_interest_data_gsasrec_muse3/val/output.txt",
     # 以下を追加(ver5)
     num_items=4,
-    embedding_dir_train="/home/hirosawa/research_m/MUSE_ver5/data/book_user_embeddings/test_train",
-    embedding_dir_valid="/home/hirosawa/research_m/MUSE_ver5/data/book_user_embeddings/valid",
-    valid_full_path="/home/hirosawa/research_m/MUSE_ver5/data/book_interest_data_gsasrec_muse3/val/full.txt",
-    test_full_path="/home/hirosawa/research_m/MUSE_ver5/data/book_interest_data_gsasrec_muse3/val/test_full.txt"
+    embedding_dir_train="/home/hirosawa/research_m/MUSE/data/book_user_embeddings/test_train",
+    embedding_dir_valid="/home/hirosawa/research_m/MUSE/data/book_user_embeddings/valid",
+    valid_full_path="/home/hirosawa/research_m/MUSE/data/book_interest_data_gsasrec_muse3/val/full.txt",
+    test_full_path="/home/hirosawa/research_m/MUSE/data/book_interest_data_gsasrec_muse3/val/test_full.txt"
 )
