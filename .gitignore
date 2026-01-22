@@ -9,6 +9,9 @@ best_model/
 models_direct/
 models_label/
 
+# configs
+config_*
+
 # Data processing
 process_data/
 data/
