@@ -7,7 +7,7 @@ class DataIteratorDirect:
     def __init__(
         self,
         source,
-        embedding_dir,          # ← 1本化
+        embedding_dir,          
         batch_size,
         maxlen,
         padding_value,
@@ -18,7 +18,7 @@ class DataIteratorDirect:
         self.device = device or torch.device("cpu")
         self.batch_size = batch_size
         self.maxlen = maxlen
-        self.seq_len = maxlen + 1
+        self.seq_len = maxlen
         self.padding_value = padding_value
         self.train_neg_per_pos = train_neg_per_pos
         self.train_flag = train_flag   # 1=train, 0=eval
@@ -34,10 +34,7 @@ class DataIteratorDirect:
         return self
 
     def __next__(self):
-        if self.train_flag == 1:
-            return self._next_train()
-        else:
-            return self._next_eval()
+        return self._next_train() if self.train_flag == 1 else self._next_eval()
 
     # =====================================================
     # Train
@@ -57,14 +54,20 @@ class DataIteratorDirect:
                 seq = seq[-self.seq_len:]
             else:
                 seq = [self.padding_value] * (self.seq_len - len(seq)) + seq
+
             seq_batch.append(seq)
 
-        pos_ids = torch.tensor(seq_batch, dtype=torch.long, device=self.device) - 1
+        pos_ids = torch.tensor(seq_batch, dtype=torch.long, device=self.device)
 
-        # --- negative sampling ---
+        # negative sampling（item id 空間そのまま）
         if self.train_neg_per_pos > 0:
             neg_shape = (pos_ids.size(0), pos_ids.size(1), self.train_neg_per_pos)
-            neg_ids = torch.randint(1, self.padding_value, neg_shape, device=self.device) - 1
+            neg_ids = torch.randint(
+                1,
+                self.padding_value + 1 + 1000000,  # ← 上限はデータに合わせる
+                neg_shape,
+                device=self.device
+            )
         else:
             neg_ids = None
 
@@ -72,7 +75,6 @@ class DataIteratorDirect:
 
         for b, user_id in enumerate(user_batch):
             emb_table = self._load_user_embedding(user_id)
-
             pos_emb_batches.append(emb_table[pos_ids[b]])
             if neg_ids is not None:
                 neg_emb_batches.append(emb_table[neg_ids[b]])
@@ -80,7 +82,8 @@ class DataIteratorDirect:
         pos_emb = torch.stack(pos_emb_batches, 0)
         neg_emb = torch.stack(neg_emb_batches, 0) if neg_ids is not None else None
 
-        mask = (pos_ids != self.padding_value - 1).float()
+        mask = (pos_ids != self.padding_value).float()
+
         return pos_emb, neg_emb, mask
 
     # =====================================================
@@ -104,14 +107,11 @@ class DataIteratorDirect:
             history = item_list[:-1]
             target = item_list[-1]
 
-            history = [i - 1 for i in history]
-            target = target - 1
-
-            seq = history + [target]
+            seq = history
             if len(seq) >= self.seq_len:
                 seq = seq[-self.seq_len:]
             else:
-                seq = [self.padding_value] * (self.seq_len - len(seq)) + seq
+                seq = [0] * (self.seq_len - len(seq)) + seq
 
             seq_batch.append(seq)
             target_batch.append(target)
@@ -119,18 +119,16 @@ class DataIteratorDirect:
         seq_tensor = torch.tensor(seq_batch, dtype=torch.long, device=self.device)
         target_tensor = torch.tensor(target_batch, dtype=torch.long, device=self.device)
 
-        mask = (seq_tensor != self.padding_value).float()
+        mask = (seq_tensor != 0).float()
 
         pos_emb_batches = []
         for b in range(len(user_batch)):
-            emb_table = emb_tables[b]
-            idx = seq_tensor[b].clone()
-            idx[idx == self.padding_value] = -1
-            idx = idx + 1
-            idx = idx.clamp(0, emb_table.size(0) - 1)
+            emb_table = emb_tables[b]  # [num_interest+1, dim]
+            idx = seq_tensor[b]
             pos_emb_batches.append(emb_table[idx])
 
         pos_emb = torch.stack(pos_emb_batches, 0)
+
         return pos_emb, target_tensor, emb_tables, mask
 
     # =====================================================
@@ -152,11 +150,14 @@ class DataIteratorDirect:
         path = os.path.join(self.embedding_dir, f"interest_vec_{user_id}.pt")
         emb = torch.load(path).to(self.device)
 
+        # idx=0 : padding (zero vector)
         pad_emb = torch.zeros(1, emb.size(1), device=self.device)
-        emb_table = torch.cat([pad_emb, emb], 0)
+
+        # idx>=1 : user interests
+        emb_table = torch.cat([pad_emb, emb], dim=0)
 
         self.embedding_cache[user_id] = emb_table
         return emb_table
-    
+
     def __len__(self):
         return (len(self.users) + self.batch_size - 1) // self.batch_size
