@@ -12,10 +12,10 @@ import torch.nn.functional as F
 
 from dataset_utils_muse import get_val_or_test_dataloader
 
-sys.path.append("/home/hirosawa/research_m/MUSE_ver4/interest_extraction")
+sys.path.append("../interest_extraction")
 from model import Model_ComiRec_SA  # モデルが格納されているファイルをインポート
 
-sys.path.append("/home/hirosawa/research_m/MUSE_ver4/predict_interest_pre")
+sys.path.append("../predict_interest")
 from eval_utils import evaluate
 from utils import build_model, get_device, load_config
 

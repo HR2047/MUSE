@@ -112,7 +112,7 @@ def main():
     parser.add_argument('--filter_rated', default=True)
 
     parser.add_argument('--result_csv_path', default="./result.csv")
-    parser.add_argument('--exp_name', default="topk")
+    parser.add_argument('--exp_name', default="direct_topk")
 
     args = parser.parse_args()
 
