@@ -9,10 +9,10 @@ from argparse import ArgumentParser
 
 from dataset_utils import get_val_or_test_dataloader
 
-sys.path.append("/home/hirosawa/research_m/MUSE_ver2/interest_extraction")
+sys.path.append("../interest_extraction")
 from model import Model_ComiRec_SA  # モデルが格納されているファイルをインポート
 
-sys.path.append("/home/hirosawa/research_m/MUSE_ver2/predict_interest_pre")
+sys.path.append("../predict_interest")
 from eval_utils import evaluate
 from utils import build_model, get_device, load_config
 
@@ -24,6 +24,61 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import json
+import csv
+
+def save_result_to_csv(csv_path, row_name, result_dict, extra_info=None):
+    row = {}
+
+    # 行名
+    row["exp_name"] = row_name
+
+    # 追加情報
+    if extra_info is not None:
+        row.update(extra_info)
+
+    # metric（順序は一旦無視）
+    for metric in result_dict:
+        row[str(metric)] = float(result_dict[metric])
+
+    # -----------------------------
+    # 既存CSVがあるかどうか
+    # -----------------------------
+    if os.path.exists(csv_path):
+        with open(csv_path, "r", newline="") as f:
+            reader = csv.reader(f)
+            header = next(reader)  # 既存の列名
+
+        # 既存列順に合わせる
+        ordered_row = {}
+
+        for col in header:
+            ordered_row[col] = row.get(col, "")
+
+        # 新しい列（後から追加されたmetricなど）
+        new_cols = [k for k in row.keys() if k not in header]
+        for col in new_cols:
+            ordered_row[col] = row[col]
+
+        fieldnames = header + new_cols
+
+    else:
+        # CSVが存在しない場合（初回）
+        ordered_row = row
+        fieldnames = list(row.keys())
+
+    # -----------------------------
+    # 書き込み
+    # -----------------------------
+    write_header = not os.path.exists(csv_path)
+
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+        if write_header:
+            writer.writeheader()
+
+        writer.writerow(ordered_row)
+
 
 def load_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -32,13 +87,16 @@ def load_json(file_path):
 
 def load_all_user_embeddings(user_embedding_dir, total_users, device):
     """全ての user_embedding を一度にロード（ディスクI/O削減）"""
+    total_start = time.time()
     user_embeddings_dict = {}
     for idx in range(total_users):
+        start = time.time()
         file_path = os.path.join(user_embedding_dir, f"interest_vec_{idx}.pt")
         if os.path.exists(file_path):  # ファイルが存在しない場合のチェック
             user_embeddings_dict[idx] = torch.load(file_path, map_location=device)
             end = time.time()
-            # logging.info(f"Loaded user embedding: {file_path}, time: {end - start:.4f} sec, total time: {end - total_start:.4f}")  # ログ出力
+            if(idx%10000==0):
+                print(f"Loaded user embedding: {idx} / {total_users}, time: {end - start:.4f} sec, total time: {end - total_start:.4f}")  # ログ出力
         else:
             print(f"警告: {file_path} が見つかりません")
             user_embeddings_dict[idx] = None
@@ -47,6 +105,9 @@ def load_all_user_embeddings(user_embedding_dir, total_users, device):
 def main():
     parser = ArgumentParser()
     parser.add_argument('--dataset_stats_path', type=str)
+
+    parser.add_argument('--result_csv_path', default="./result.csv")
+    parser.add_argument('--exp_name', default="label_soft")
 
     args = parser.parse_args()
 
@@ -78,7 +139,7 @@ def main():
     # item_embedding取得
     # TensorFlow セッションの開始
     with tf.Session(config=config_comirec) as sess:
-        model_comirec = Model_ComiRec_SA(num_items, embedding_dim, hidden_size, batch_size, num_interests, seq_len)
+        model_comirec = Model_ComiRec_SA(num_items+1, embedding_dim, hidden_size, batch_size, num_interests, seq_len)
         
         # セッションの初期化
         sess.run(tf.global_variables_initializer())
@@ -141,11 +202,13 @@ def main():
             users_processed += 1
             pass
         
-    result = ir_measures.calc_aggregate([nDCG@50, nDCG@20, R@50, R@20, R@1], qrels, scored_docs)
+    result_comirec = ir_measures.calc_aggregate([nDCG@50, nDCG@20, nDCG@10, nDCG@5, nDCG@3, nDCG@1, R@50, R@20, R@10, R@5, R@3, R@1], qrels, scored_docs)
     evaluate_time = time.time() - start
 
-    print(result)
+    print(result_comirec)
     print(f"time: ", evaluate_time)
+
+    save_result_to_csv(args.result_csv_path, args.exp_name, result_comirec)
             
 
 if __name__ == "__main__":
