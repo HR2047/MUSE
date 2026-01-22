@@ -122,7 +122,7 @@ def main():
     parser.add_argument('--dataset_stats_path', type=str)
     parser.add_argument('--config', type=str)
     parser.add_argument('--k', type=int)
-    parser.add_argument('--filter_rated', default=True)
+    parser.add_argument('--filter_rated',type=lambda x: x.lower() in ("true", "1", "yes"),default=True)
 
     parser.add_argument('--result_csv_path', default="./result.csv")
     parser.add_argument('--exp_name', default="label_topk")
