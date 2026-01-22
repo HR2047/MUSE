@@ -233,7 +233,7 @@ def main():
                     Qrel(str(users_processed), str(tgt.item()), 1)
                 )
             
-            users_processed += 1
+                users_processed += 1
 
     metrics = [nDCG@50, nDCG@20, nDCG@10, nDCG@5, nDCG@3, nDCG@1,
                 R@50, R@20, R@10, R@5, R@3, R@1]
