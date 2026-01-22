@@ -5,7 +5,7 @@ import torch
 import time
 from utils import load_config, build_model, get_device
 from dataset_utils import get_dataloader, get_num_items
-from data_iterator_for_ver3_for_list import DataIteratorList
+from data_iterator_label import DataIteratorList
 from tqdm import tqdm
 from eval_utils import evaluate
 from torchinfo import summary
