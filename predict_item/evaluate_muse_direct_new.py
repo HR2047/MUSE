@@ -59,7 +59,7 @@ def main():
 
     test_dataloader = DataIteratorDirect(
         source=config_gsasrec.test_full_path, 
-        embedding_dir=config_gsasrec.embedding_dir_valid,
+        embedding_dir=config_gsasrec.embedding_dir_train,
         batch_size=config_gsasrec.eval_batch_size, 
         maxlen=config_gsasrec.sequence_length, 
         padding_value=config_gsasrec.num_items+1, 
