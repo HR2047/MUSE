@@ -7,17 +7,17 @@ import ir_measures
 import time
 import os
 import json
+import csv
 from argparse import ArgumentParser
-import torch.nn.functional as F
 
 from dataset_utils_muse import get_val_or_test_dataloader
 
-sys.path.append("../interest_extraction")
+sys.path.append("/home/hirosawa/research_m/MUSE/interest_extraction")
 from model import Model_ComiRec_SA  # モデルが格納されているファイルをインポート
 
-sys.path.append("../predict_interest")
+sys.path.append("/home/hirosawa/research_m/MUSE/predict_interest")
 from eval_utils import evaluate
-from utils import build_model, get_device, load_config
+from utils import build_model, build_model_ver5, get_device, load_config
 from data_iterator_direct import DataIteratorDirect
 
 import torch
@@ -25,6 +25,7 @@ import tensorflow as tf
 from collections import Counter
 
 import csv
+import os
 
 def save_result_to_csv(csv_path, row_name, result_dict, extra_info=None):
     row = {}
@@ -109,7 +110,7 @@ def main():
     parser.add_argument('--filter_rated',type=lambda x: x.lower() in ("true", "1", "yes"),default=True)
 
     parser.add_argument('--result_csv_path', default="./result.csv")
-    parser.add_argument('--exp_name', default="label_soft")
+    parser.add_argument('--exp_name', default="direct_soft")
 
     args = parser.parse_args()
 
@@ -125,18 +126,12 @@ def main():
 
     model_comirec_path = dataset_stats['model_comirec_path']
     user_embedding_dir = dataset_stats['user_embedding_dir']
-    num_user = dataset_stats['num_users']
-
-    test_input_path = dataset_stats['interest_test_input_path']
-    test_output_path = dataset_stats['data_test_output_path']
-
-    rated_path = dataset_stats['data_test_input_path']
 
     config_gsasrec = load_config(args.config)
     device = get_device()
     check_point = dataset_stats['interest_gsasrec_model_path']
 
-    model_gsasrec = build_model(config_gsasrec)
+    model_gsasrec = build_model_ver5(config_gsasrec)
     model_gsasrec = model_gsasrec.to(device)
     model_gsasrec.load_state_dict(torch.load(check_point, map_location=device))
 
@@ -150,7 +145,11 @@ def main():
         train_flag=0,
     )
 
-    all_user_embeddings = load_all_user_embeddings(user_embedding_dir, num_user, device)
+    all_user_embeddings = load_all_user_embeddings(
+        user_embedding_dir=user_embedding_dir,
+        total_users=dataset_stats['num_users'],
+        device=device
+    )
     gpu_options = tf.GPUOptions(allow_growth=True)
 
     config_comirec = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
@@ -165,7 +164,6 @@ def main():
         model_comirec.restore(sess, model_comirec_path)
         item_embeddings = model_comirec.output_item(sess)
         item_embeddings = torch.tensor(item_embeddings, dtype=torch.float32)
-
     item_embeddings = item_embeddings.to(device)
 
     max_batches = len(test_dataloader)
