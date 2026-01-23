@@ -22,6 +22,7 @@ from data_iterator_direct import DataIteratorDirect
 import torch
 import tensorflow as tf
 from collections import Counter
+import csv
 
 def save_result_to_csv(csv_path, row_name, result_dict, extra_info=None):
     row = {}
