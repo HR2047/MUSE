@@ -217,9 +217,6 @@ def main():
                 # ---- top-N 推薦 ----
                 values, indices = torch.topk(final_item_scores, 50)
 
-                # shape: (num_interest, D)
-                user_interest_embs = user_interest_embs.to(device)
-
                 for item, score in zip(indices, values):
                     scored_docs.append(
                         ScoredDoc(
