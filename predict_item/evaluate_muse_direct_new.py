@@ -23,6 +23,59 @@ import torch
 import tensorflow as tf
 from collections import Counter
 
+def save_result_to_csv(csv_path, row_name, result_dict, extra_info=None):
+    row = {}
+
+    # 行名
+    row["exp_name"] = row_name
+
+    # 追加情報
+    if extra_info is not None:
+        row.update(extra_info)
+
+    # metric（順序は一旦無視）
+    for metric in result_dict:
+        row[str(metric)] = float(result_dict[metric])
+
+    # -----------------------------
+    # 既存CSVがあるかどうか
+    # -----------------------------
+    if os.path.exists(csv_path):
+        with open(csv_path, "r", newline="") as f:
+            reader = csv.reader(f)
+            header = next(reader)  # 既存の列名
+
+        # 既存列順に合わせる
+        ordered_row = {}
+
+        for col in header:
+            ordered_row[col] = row.get(col, "")
+
+        # 新しい列（後から追加されたmetricなど）
+        new_cols = [k for k in row.keys() if k not in header]
+        for col in new_cols:
+            ordered_row[col] = row[col]
+
+        fieldnames = header + new_cols
+
+    else:
+        # CSVが存在しない場合（初回）
+        ordered_row = row
+        fieldnames = list(row.keys())
+
+    # -----------------------------
+    # 書き込み
+    # -----------------------------
+    write_header = not os.path.exists(csv_path)
+
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+        if write_header:
+            writer.writeheader()
+
+        writer.writerow(ordered_row)
+
 def load_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
@@ -38,6 +91,9 @@ def main():
     args = parser.parse_args()
 
     dataset_stats = load_json(args.dataset_stats_path)
+
+    parser.add_argument('--result_csv_path', default="./result.csv")
+    parser.add_argument('--exp_name', default="direct_topk")
 
     # 訓練時に用いたパラメータ
     n_mid = dataset_stats['num_items']  # アイテムの数（IDの数）
@@ -125,6 +181,7 @@ def main():
     result_muse = ir_measures.calc_aggregate(metrics, qrels, scored_docs)
 
     print(result_muse)
+    save_result_to_csv(args.result_csv_path, args.exp_name, result_muse)
             
 if __name__ == "__main__":
     main()
