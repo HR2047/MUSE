@@ -3,15 +3,14 @@ import os
 
 import torch
 import time
-from utils import load_config, build_model_ver5, get_device
+from utils import load_config, build_model_vec, get_device
 from dataset_utils import get_dataloader, get_num_items
-from data_iterator_for_ver5_for_train import DataIteratorVer5Train
-from data_iterator_for_ver5_for_eval import DataIteratorVer5Eval
+from data_iterator_direct import DataIteratorDirect
 from tqdm import tqdm
 from eval_utils import evaluate, evaluate_ver5
 from torchinfo import summary
 
-print("train_gsasrec_for_ver5.py", flush=True)
+print("train_gsasrec_direct", flush=True)
 
 models_dir = "models"
 if not os.path.exists(models_dir):
@@ -27,7 +26,7 @@ config = load_config(args.config)
 print("-------------", flush=True)
 
 device = get_device()
-model = build_model_ver5(config)
+model = build_model_vec(config)
 
 # ここが要変更(ver3にて変更)
 # train_dataloader = get_train_dataloader(config.dataset_name, batch_size=config.train_batch_size,
@@ -37,22 +36,24 @@ model = build_model_ver5(config)
 print('dataloder making begin', flush=True)
 
 # ここが要変更
-train_dataloader = DataIteratorVer5Train(
+train_dataloader = DataIteratorDirect(
     source=config.train_file_path, 
     embedding_dir_train=config.embedding_dir_train,
     batch_size=config.train_batch_size, 
     maxlen=config.sequence_length, 
-    padding_value=config.num_items+1,
+    num_item=config.num_items,
     train_neg_per_pos=config.negs_per_pos,
+    train_flag=1,
     device=device,
 )
 
-val_dataloader = DataIteratorVer5Eval(
+val_dataloader = DataIteratorDirect(
     source=config.valid_full_path, 
     embedding_dir_valid=config.embedding_dir_valid,
     batch_size=config.eval_batch_size, 
     maxlen=config.sequence_length, 
-    padding_value=config.num_items+1, 
+    num_item=config.num_items,
+    train_flag=0, 
     device=device,
 )
 
