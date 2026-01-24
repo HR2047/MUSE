@@ -29,7 +29,7 @@ def evaluate(model: GSASRec, data_loader, metrics, limit, filter_rated, device):
     return result
     
 # model(入力：embedding　出力：embedding), 出力：スコア平均
-def evaluate_ver5(model, data_loader, metrics, topk, device):
+def evaluate_vec(model, data_loader, metrics, topk, device):
     """
     pos_emb: (B, T, D)
     target:  (B,)
@@ -73,7 +73,7 @@ def evaluate_ver5(model, data_loader, metrics, topk, device):
                 
                 # item_id は 0-index なのでそのまま扱う
                 batch_scores.append(values)
-                batch_items.append(indices)
+                batch_items.append(indices+1)
 
             for items_pred, scores_pred, tgt in zip(batch_items, batch_scores, target):
                 # 推薦されたアイテムのスコアを追加
