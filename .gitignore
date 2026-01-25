@@ -12,6 +12,9 @@ models_label/
 # configs
 config_*
 
+# test
+test/
+
 # Data processing
 process_data/
 data/
