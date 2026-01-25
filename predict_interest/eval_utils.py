@@ -70,8 +70,8 @@ def evaluate_vec(model, data_loader, metrics, topk, device):
                 
                 # 上位 topk を取得
                 values, indices = torch.topk(scores, topk)
-                
-                # item_id は 0-index なのでそのまま扱う
+
+                # item_id は 0-indexではないのでindicies+1
                 batch_scores.append(values)
                 batch_items.append(indices+1)
 
