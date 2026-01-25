@@ -100,7 +100,7 @@ def main():
     parser.add_argument('--dataset_stats_path', type=str)
     parser.add_argument('--config', type=str)
 
-    parser.add_argument('--result_csv_path', default="./result.csv")
+    parser.add_argument('--result_csv_path', default="log/result.csv")
     parser.add_argument('--exp_name', default="comirec")    
 
     args = parser.parse_args()
@@ -194,7 +194,7 @@ def main():
             users_processed += 1
             pass
         
-    result_comirec = ir_measures.calc_aggregate([R@1, R@2], qrels, scored_docs)
+    result_comirec = ir_measures.calc_aggregate([R@1, R@2, R@3, R@4], qrels, scored_docs)
 
     print(result_comirec)
     save_result_to_csv(args.result_csv_path, args.exp_name, result_comirec)
