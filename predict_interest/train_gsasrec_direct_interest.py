@@ -7,7 +7,7 @@ from utils import load_config, build_model_vec, get_device
 from dataset_utils import get_dataloader, get_num_items
 from data_iterator_direct import DataIteratorDirect
 from tqdm import tqdm
-from eval_utils import evaluate, evaluate_ver5
+from eval_utils import evaluate, evaluate_vec
 from torchinfo import summary
 
 print("train_gsasrec_direct", flush=True)
@@ -38,7 +38,7 @@ print('dataloder making begin', flush=True)
 # ここが要変更
 train_dataloader = DataIteratorDirect(
     source=config.train_file_path, 
-    embedding_dir_train=config.embedding_dir_train,
+    embedding_dir=config.embedding_dir_train,
     batch_size=config.train_batch_size, 
     maxlen=config.sequence_length, 
     num_item=config.num_items,
@@ -49,7 +49,7 @@ train_dataloader = DataIteratorDirect(
 
 val_dataloader = DataIteratorDirect(
     source=config.valid_full_path, 
-    embedding_dir_valid=config.embedding_dir_valid,
+    embedding_dir=config.embedding_dir_valid,
     batch_size=config.eval_batch_size, 
     maxlen=config.sequence_length, 
     num_item=config.num_items,
@@ -131,7 +131,7 @@ for pos_emb, neg_emb, pos_mask in train_dataloader:
         print(f"step: {step}", flush=True)
 
     if step % test_iter == 0: # 終了条件チェックをtest_iterごとに行う
-        evaluation_result = evaluate_ver5(model, val_dataloader, config.metrics, config.recommendation_limit, device) 
+        evaluation_result = evaluate_vec(model, val_dataloader, config.metrics, config.recommendation_limit, device) 
         log_str = 'iter: %d, train loss: %.4f' % (step, loss_sum / test_iter)
         log_str += ', ' + str(config.val_metric) + ': %.6f' % (evaluation_result[config.val_metric])
         test_time = time.time()
@@ -141,7 +141,7 @@ for pos_emb, neg_emb, pos_mask in train_dataloader:
         
         if evaluation_result[config.val_metric] > best_metric:
             best_metric = evaluation_result[config.val_metric]
-            model_name = f"models_ver5/gsasrec-{config.dataset_name}-step:{step}-t:{config.gbce_t}-negs:{config.negs_per_pos}-emb:{config.embedding_dim}-dropout:{config.dropout_rate}-metric:{best_metric}.pt" 
+            model_name = f"models_direct/gsasrec-{config.dataset_name}-step:{step}-t:{config.gbce_t}-negs:{config.negs_per_pos}-emb:{config.embedding_dim}-dropout:{config.dropout_rate}-metric:{best_metric}.pt" 
             print(f"Saving new best model to {model_name}")
             if best_model_name is not None:
                 os.remove(best_model_name)

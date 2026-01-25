@@ -2,6 +2,7 @@ import os
 import torch
 import random
 
+# padding_valueは0
 class DataIteratorDirect:
 
     def __init__(
@@ -10,7 +11,7 @@ class DataIteratorDirect:
         embedding_dir,          
         batch_size,
         maxlen,
-        padding_value,
+        num_item,
         device,
         train_neg_per_pos=-1,
         train_flag=1
@@ -19,7 +20,7 @@ class DataIteratorDirect:
         self.batch_size = batch_size
         self.maxlen = maxlen
         self.seq_len = maxlen
-        self.padding_value = padding_value
+        self.num_item = num_item
         self.train_neg_per_pos = train_neg_per_pos
         self.train_flag = train_flag   # 1=train, 0=eval
 
@@ -45,7 +46,7 @@ class DataIteratorDirect:
 
         for user_id in user_batch:
             item_list = self.graph[user_id]
-            k = random.choice(range(4, len(item_list)))
+            k = random.choice(range(3, len(item_list)))
             history = item_list[:k]
             target = item_list[k]
 
@@ -53,7 +54,7 @@ class DataIteratorDirect:
             if len(seq) >= self.seq_len:
                 seq = seq[-self.seq_len:]
             else:
-                seq = [self.padding_value] * (self.seq_len - len(seq)) + seq
+                seq = [0] * (self.seq_len - len(seq)) + seq
 
             seq_batch.append(seq)
 
@@ -61,13 +62,28 @@ class DataIteratorDirect:
 
         # negative sampling（item id 空間そのまま）
         if self.train_neg_per_pos > 0:
-            neg_shape = (pos_ids.size(0), pos_ids.size(1), self.train_neg_per_pos)
-            neg_ids = torch.randint(
-                1,
-                self.padding_value + 1 + 1000000,  # ← 上限はデータに合わせる
-                neg_shape,
-                device=self.device
-            )
+            B, T = pos_ids.size()
+            N = self.train_neg_per_pos
+
+            neg_ids = torch.zeros(B, T, N, dtype=torch.long, device=self.device)
+
+            for b in range(B):
+                for t in range(T):
+                    pos_id = pos_ids[b, t].item()
+
+                    # padding の位置は sampling 不要
+                    if pos_id == 0:
+                        continue
+
+                    # sampling 空間（1..num_item）
+                    # 正例を除外
+                    candidates = list(range(1, self.num_item + 1))
+                    candidates.remove(pos_id)
+
+                    # 重複なし sampling
+                    sampled = random.sample(candidates, N)
+
+                    neg_ids[b, t] = torch.tensor(sampled, device=self.device)
         else:
             neg_ids = None
 
@@ -82,7 +98,7 @@ class DataIteratorDirect:
         pos_emb = torch.stack(pos_emb_batches, 0)
         neg_emb = torch.stack(neg_emb_batches, 0) if neg_ids is not None else None
 
-        mask = (pos_ids != self.padding_value).float()
+        mask = (pos_ids != 0).float()
 
         return pos_emb, neg_emb, mask
 
