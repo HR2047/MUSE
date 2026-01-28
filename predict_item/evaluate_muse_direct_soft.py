@@ -140,7 +140,7 @@ def main():
         embedding_dir=config_gsasrec.embedding_dir_train,
         batch_size=config_gsasrec.eval_batch_size, 
         maxlen=config_gsasrec.sequence_length, 
-        padding_value=config_gsasrec.num_items+1, 
+        num_item=config_gsasrec.num_items, 
         device=device,
         train_flag=0,
     )
