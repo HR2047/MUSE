@@ -3,9 +3,9 @@ import os
 
 import torch
 import time
-from utils import load_config, build_model, get_device
+from utils import load_config, build_model_label, get_device
 from dataset_utils import get_dataloader, get_num_items
-from data_iterator_label import DataIteratorList
+from data_iterator_label import DataIteratorLabel
 from tqdm import tqdm
 from eval_utils import evaluate
 from torchinfo import summary
@@ -25,9 +25,9 @@ config = load_config(args.config)
 
 print("-------------", flush=True)
 
-num_items = get_num_items(config.dataset_name) 
+num_items = config.num_items
 device = get_device()
-model = build_model(config)
+model = build_model_label(config, config.num_items)
 
 # ここが要変更
 # train_dataloader = get_train_dataloader(config.dataset_name, batch_size=config.train_batch_size,
@@ -36,7 +36,7 @@ model = build_model(config)
 
 print('dataloade making begin', flush=True)
 
-train_dataloader = DataIteratorList(config.train_file_path, config.train_batch_size, config.sequence_length, train_flag=0, padding_value=num_items+1, train_neg_per_pos=config.negs_per_pos)
+train_dataloader = DataIteratorLabel(config.train_file_path, config.train_batch_size, config.sequence_length, train_flag=0, padding_value=num_items+1, train_neg_per_pos=config.negs_per_pos)
 val_dataloader = get_dataloader(input_path=config.valid_input_path, output_path=config.valid_output_path, batch_size=config.train_batch_size, max_length=config.sequence_length, padding_value=num_items+1)
 
 print('dataloder making end', flush=True)
@@ -110,7 +110,7 @@ for positives, negatives in train_dataloader:
         
         if evaluation_result[config.val_metric] > best_metric:
             best_metric = evaluation_result[config.val_metric]
-            model_name = f"models/gsasrec-{config.dataset_name}-step:{step}-t:{config.gbce_t}-negs:{config.negs_per_pos}-emb:{config.embedding_dim}-dropout:{config.dropout_rate}-metric:{best_metric}.pt" 
+            model_name = f"models_label/gsasrec-{config.dataset_name}-step:{step}-t:{config.gbce_t}-negs:{config.negs_per_pos}-emb:{config.embedding_dim}-dropout:{config.dropout_rate}-metric:{best_metric}.pt" 
             print(f"Saving new best model to {model_name}")
             if best_model_name is not None:
                 os.remove(best_model_name)
