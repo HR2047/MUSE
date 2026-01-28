@@ -8,6 +8,7 @@ __pycache__/
 best_model/
 models_direct/
 models_label/
+models_predict_item/
 
 # configs
 config_*
