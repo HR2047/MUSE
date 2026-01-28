@@ -17,7 +17,7 @@ from model import Model_ComiRec_SA  # モデルが格納されているファイ
 
 sys.path.append("/home/hirosawa/research_m/MUSE/predict_interest")
 from eval_utils import evaluate
-from utils import build_model, build_model_ver5, get_device, load_config
+from utils import build_model_vec, get_device, load_config
 from data_iterator_direct import DataIteratorDirect
 
 import torch
@@ -131,7 +131,7 @@ def main():
     device = get_device()
     check_point = dataset_stats['interest_gsasrec_model_path']
 
-    model_gsasrec = build_model_ver5(config_gsasrec)
+    model_gsasrec = build_model_vec(config_gsasrec)
     model_gsasrec = model_gsasrec.to(device)
     model_gsasrec.load_state_dict(torch.load(check_point, map_location=device))
 
