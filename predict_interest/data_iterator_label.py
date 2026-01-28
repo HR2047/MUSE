@@ -2,7 +2,7 @@ import numpy as np
 import random
 import torch
 
-class DataIteratorList:
+class DataIteratorLabel:
 
     def __init__(self, source,
                  batch_size=128,
