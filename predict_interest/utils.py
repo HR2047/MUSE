@@ -11,8 +11,9 @@ def load_config(config_file: str) -> GSASRecExperimentConfig:
     spec.loader.exec_module(config_module)
     return config_module.config
 
-def build_model_label(config: GSASRecExperimentConfig):
-    num_items = get_num_items(config.dataset_name) 
+def build_model_label(config: GSASRecExperimentConfig, num_items=0):
+    # if num_items==0:
+    #     num_items = get_num_items(config.dataset_name) 
     model = GSASRec(num_items, sequence_length=config.sequence_length, embedding_dim=config.embedding_dim,
                         num_heads=config.num_heads, num_blocks=config.num_blocks, dropout_rate=config.dropout_rate)
     return model
@@ -25,7 +26,7 @@ def build_model_vec(config: GSASRecExperimentConfig):
 def get_device():
     device = "cpu"
     if torch.cuda.is_available():
-        device="cuda:0"
+        device="cuda:1"
     return device
 
 
