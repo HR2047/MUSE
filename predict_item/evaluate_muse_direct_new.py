@@ -9,14 +9,12 @@ import os
 import json
 from argparse import ArgumentParser
 
-from dataset_utils_muse import get_val_or_test_dataloader
-
-sys.path.append("/home/hirosawa/research_m/MUSE/interest_extraction")
+sys.path.append("../interest_extraction")
 from model import Model_ComiRec_SA  # モデルが格納されているファイルをインポート
 
-sys.path.append("/home/hirosawa/research_m/MUSE/predict_interest")
+sys.path.append("../predict_interest")
 from eval_utils import evaluate
-from utils import build_model, build_model_ver5, get_device, load_config
+from utils import build_model_vec, get_device, load_config
 from data_iterator_direct import DataIteratorDirect
 
 import torch
@@ -89,12 +87,12 @@ def main():
     parser.add_argument('--config', type=str)
     parser.add_argument('--filter_rated',type=lambda x: x.lower() in ("true", "1", "yes"),default=True)
 
+    parser.add_argument('--result_csv_path', default="./result.csv")
+    parser.add_argument('--exp_name', default="direct_topk")
+
     args = parser.parse_args()
 
     dataset_stats = load_json(args.dataset_stats_path)
-
-    parser.add_argument('--result_csv_path', default="./result.csv")
-    parser.add_argument('--exp_name', default="direct_topk")
 
     # 訓練時に用いたパラメータ
     n_mid = dataset_stats['num_items']  # アイテムの数（IDの数）
@@ -110,7 +108,7 @@ def main():
     device = get_device()
     check_point = dataset_stats['interest_gsasrec_model_path']
 
-    model_gsasrec = build_model_ver5(config_gsasrec)
+    model_gsasrec = build_model_vec(config_gsasrec)
     model_gsasrec = model_gsasrec.to(device)
     model_gsasrec.load_state_dict(torch.load(check_point, map_location=device))
 
@@ -119,7 +117,7 @@ def main():
         embedding_dir=config_gsasrec.embedding_dir_train,
         batch_size=config_gsasrec.eval_batch_size, 
         maxlen=config_gsasrec.sequence_length, 
-        padding_value=config_gsasrec.num_items+1, 
+        num_item=config_gsasrec.num_items, 
         device=device,
         train_flag=0,
     )
