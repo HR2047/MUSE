@@ -35,7 +35,6 @@ model = build_model_vec(config)
 
 print('dataloder making begin', flush=True)
 
-# ここが要変更
 train_dataloader = DataIteratorDirect(
     source=config.train_file_path, 
     embedding_dir=config.embedding_dir_train,
